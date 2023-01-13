@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import com.ctre.phoenix.sensors.WPI_PigeonIMU;
 import com.revrobotics.CANSparkMax;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -17,7 +18,9 @@ public class Drivetrain extends SubsystemBase {
   private CANSparkMax rearRightMotor;
   private MecanumDrive drive;
   private MecanumDriveOdometry odometry;
+  private WPI_PigeonIMU imu;
   private static final Rotation2d ZERO = new Rotation2d(0);
+
 
   public Drivetrain() {
     frontLeftMotor = FRONT_LEFT.createMotor();
@@ -26,6 +29,11 @@ public class Drivetrain extends SubsystemBase {
     rearRightMotor = REAR_RIGHT.createMotor();
 
     // initialize the gyro
+    imu = new WPI_PigeonIMU(0);
+    imu.configFactoryDefault();
+    imu.setYaw(0);
+    imu.setAccumZAngle(0);
+    imu.reset();
 
     drive = new MecanumDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
     odometry = new MecanumDriveOdometry(DRIVE_KINEMATICS, getAngle(), getWheelPositions());
@@ -38,12 +46,11 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public void resetOdemetry(Pose2d pose) {
-    odometry.resetPosition(getAngle(), null, pose);
+    odometry.resetPosition(getAngle(), getWheelPositions(), pose);
   }
 
   private Rotation2d getAngle() {
-    // FIXME:
-    return ZERO;
+    return imu.getRotation2d();
   }
 
   public MecanumDriveWheelPositions getWheelPositions() {
