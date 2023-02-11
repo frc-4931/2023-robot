@@ -5,21 +5,28 @@ import java.util.List;
 import java.util.Optional;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMax.SoftLimitDirection;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
+import com.revrobotics.SparkMaxAlternateEncoder.Type;
 
+import edu.wpi.first.math.geometry.Rotation3d;
+import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.geometry.Translation3d;
 import edu.wpi.first.math.kinematics.MecanumDriveKinematics;
 import edu.wpi.first.math.util.Units;
 
 public final class Constants {    
   
   public static final class DriveConstants {
+    public static final int IMU = 1;
+
     private static final double OPEN_RAMP_RATE = 0.75;
     private static final double WHEEL_DIAMETER_M = Units.inchesToMeters(8);
-    private static final double DRIVE_GEAR_RATIO = (70d / 14d) * (66d / 30d);
+    private static final double DRIVE_GEAR_RATIO = (14d / 70d) * (30d / 66d);
     private static final double ENCODER_POSITION_CONVERSION =
         Math.PI * WHEEL_DIAMETER_M / DRIVE_GEAR_RATIO;
     // TODO: Find actual values for these!
@@ -59,8 +66,8 @@ public final class Constants {
             ;
     public static final MotorConfig REAR_RIGHT = new MotorConfig()
             .canId(9)
-            .idleMode(IdleMode.kBrake)
             .inverted(true)
+            .idleMode(IdleMode.kBrake)
             .pidConfig(PID_DEFAULTS)
             .positionConversionFactor(ENCODER_POSITION_CONVERSION)
             .openLoopRampRate(OPEN_RAMP_RATE)
@@ -77,19 +84,82 @@ public final class Constants {
             new Translation2d(kWheelBase / 2, -kTrackWidth / 2),
             new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
             new Translation2d(-kWheelBase / 2, -kTrackWidth / 2));
+
+    public static final double MAX_SPEED = 1; // m/s
   }
 
+  public static final class ArmConstants {
+    public static final MotorConfig LIFT_MOTOR = new MotorConfig()
+            .canId(11)
+            .idleMode(IdleMode.kBrake)
+            .pidConfig(new PIDConfig()
+              .kP(5e-5)
+              .kI(1e-6)
+              .kD(0)
+              .kFF(0.000156)
+              .maxAcceleration(1500)
+              .maxVelocity(2000)
+              .outputRangeHigh(1)
+              .outputRangeLow(-1)
+              .allowedClosedLoopError(1)
+            )
+            .alternateEncoderConfig(new AlternateEncoderConfig())
+            .positionConversionFactor(Units.rotationsToRadians(1))
+            
+            .openLoopRampRate(1)
+            ;
+    public static final double FEED_FORWARD_KS = 0;
+    public static final double FEED_FORWARD_KG = 0;
+    public static final double FEED_FORWARD_KV = 0;
+    public static final double FEED_FORWARD_KA = 0;
+
+    public static final MotorConfig WINCH_MOTOR = new MotorConfig()
+      .canId(12)
+      .idleMode(IdleMode.kBrake)
+      .pidConfig(new PIDConfig()
+        .kP(5e-5)
+        .kI(1e-6)
+        .kD(0)
+        .kFF(0.000156)
+        .maxAcceleration(1500)
+        .maxVelocity(2000)
+        .outputRangeHigh(1)
+        .outputRangeLow(-1)
+        .allowedClosedLoopError(1)
+      )
+      // spool diameter * pi * (gear ratio)
+      .positionConversionFactor(Units.inchesToMeters(0.787) * Math.PI * (44d /72d))
+      .startPosition(0)
+      // TODO: add soft limits
+      
+      .openLoopRampRate(1);
+  }
+
+
+  public static final class VisionConstants {
+    public static final String CAMERA_NAME = "photon";
+    public static final Transform3d ROBOT_TO_CAM = new Transform3d(
+      new Translation3d(
+        0.5, // half meter forward of center
+        0.0, // center of robot
+        0.5  // half meter up
+      ), new Rotation3d(0, 0, 0));
+  }
 
   public static class MotorConfig {
     private int canId;
     private double closedLoopRampRate = 0;
     private double openLoopRampRate = 0;
+    private int stallLimit = 20;
+    private int freeLimit = 5600;
     // private MotorType type = MotorType.kBrushless;
     private Optional<SoftLimit> softLimitForward = Optional.empty();
     private Optional<SoftLimit> softLimitReverse = Optional.empty();
+    private Optional<AlternateEncoderConfig> alternateEncoder = Optional.empty();
     private IdleMode idleMode = IdleMode.kBrake;
     private boolean inverted = false;
     private double positionConversionFactor = 1;
+    private double startPosition = 0;
     private List<PIDConfig> pidConfigs = new ArrayList<>();
     private MotorConfig follower;
   
@@ -104,7 +174,7 @@ public final class Constants {
       motor.setIdleMode(idleMode);
       motor.setInverted(inverted);
       // motor.enableVoltageCompensation(nominalVoltage);
-      // motor.setSmartCurrentLimit(stallLimit, freeLimit)
+      motor.setSmartCurrentLimit(stallLimit, freeLimit);
       motor.setOpenLoopRampRate(openLoopRampRate);
       softLimitForward.ifPresent((softLimit) -> {
         motor.enableSoftLimit(SoftLimitDirection.kForward, true);
@@ -115,9 +185,18 @@ public final class Constants {
         motor.setSoftLimit(SoftLimitDirection.kReverse, softLimit.limit);
       });
 
-      motor.getEncoder().setPositionConversionFactor(positionConversionFactor);
-      motor.getEncoder().setVelocityConversionFactor(positionConversionFactor / 60);
-      motor.getEncoder().setPosition(0);
+      alternateEncoder.ifPresentOrElse(ae -> {
+        RelativeEncoder encoder = motor.getAlternateEncoder(ae.type, ae.countsPerRevolution);
+        encoder.setInverted(ae.inverted);
+        encoder.setPosition(startPosition);
+        encoder.setPositionConversionFactor(positionConversionFactor);
+        encoder.setVelocityConversionFactor(positionConversionFactor / 60);
+        motor.getPIDController().setFeedbackDevice(encoder);
+      }, () -> {
+        motor.getEncoder().setPositionConversionFactor(positionConversionFactor);
+        motor.getEncoder().setVelocityConversionFactor(positionConversionFactor / 60);
+        motor.getEncoder().setPosition(startPosition);
+      });
   
       SparkMaxPIDController pidController = motor.getPIDController();
       for (int i = 0; i < pidConfigs.size(); i++) {
@@ -140,7 +219,9 @@ public final class Constants {
   
         var followerMotor = follower.createMotor(false);
         followerMotor.follow(motor, followerInverted);
-        followerMotor.burnFlash();
+        if (burnFlash) {
+          followerMotor.burnFlash();
+        }
       }
   
       if (burnFlash) {
@@ -189,6 +270,11 @@ public final class Constants {
       return this;
     }
 
+    public MotorConfig startPosition(double startPosition) {
+      this.startPosition = startPosition;
+      return this;
+    }
+
     public MotorConfig pidConfigs(List<PIDConfig> pidConfigs) {
       this.pidConfigs = pidConfigs;
       return this;
@@ -201,6 +287,11 @@ public final class Constants {
 
     public MotorConfig pidConfig(PIDConfig pidConfig) {
       pidConfigs.add(pidConfig);
+      return this;
+    }
+
+    public MotorConfig alternateEncoderConfig(AlternateEncoderConfig alternateEncoderConfig) {
+      this.alternateEncoder = Optional.ofNullable(alternateEncoderConfig);
       return this;
     }
   }
@@ -268,4 +359,24 @@ public final class Constants {
     }
   }
 
+  static final class AlternateEncoderConfig {
+    private int countsPerRevolution = 8192;
+    private Type type = Type.kQuadrature;
+    private boolean inverted = false;
+
+    public AlternateEncoderConfig type(Type type) {
+      this.type = type;
+      return this;
+    }
+
+    public AlternateEncoderConfig countsPerRevolution(int countsPerRevolution) {
+      this.countsPerRevolution = countsPerRevolution;
+      return this;
+    }
+
+    public AlternateEncoderConfig inverted(boolean inverted) {
+      this.inverted = inverted;
+      return this;
+    }
+  }
 }
