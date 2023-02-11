@@ -114,7 +114,7 @@ public final class Constants {
     public static final double FEED_FORWARD_KA = 0;
 
     public static final MotorConfig WINCH_MOTOR = new MotorConfig()
-      .canId(12)
+      .canId(13)
       .idleMode(IdleMode.kBrake)
       .pidConfig(new PIDConfig()
         .kP(5e-5)
