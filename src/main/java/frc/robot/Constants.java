@@ -71,6 +71,7 @@ public final class Constants {
             .pidConfig(PID_DEFAULTS)
             .positionConversionFactor(ENCODER_POSITION_CONVERSION)
             .openLoopRampRate(OPEN_RAMP_RATE)
+            
             ;
 
     // Distance between centers of right and left wheels on robot
@@ -89,7 +90,7 @@ public final class Constants {
   }
 
   public static final class ArmConstants {
-    public static final MotorConfig LIFT_MOTOR = new MotorConfig()
+    public static final MotorConfig ARM_MOTOR = new MotorConfig()
             .canId(11)
             .idleMode(IdleMode.kBrake)
             .pidConfig(new PIDConfig()
@@ -105,7 +106,8 @@ public final class Constants {
             )
             .alternateEncoderConfig(new AlternateEncoderConfig())
             .positionConversionFactor(Units.rotationsToRadians(1))
-            
+            .softLimitForward(new SoftLimit().limit(180)) // TODO: need to find the value to do floor pickup
+            .softLimitReverse(new SoftLimit().limit(0))
             .openLoopRampRate(1)
             ;
     public static final double FEED_FORWARD_KS = 0;
