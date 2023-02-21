@@ -150,7 +150,7 @@ public final class Constants {
     private int canId;
     private double closedLoopRampRate = 0;
     private double openLoopRampRate = 0;
-    private int stallLimit = 20;
+    private int stallLimit = 60;
     private int freeLimit = 5600;
     // private MotorType type = MotorType.kBrushless;
     private Optional<SoftLimit> softLimitForward = Optional.empty();

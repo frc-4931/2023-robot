@@ -42,7 +42,7 @@ public class RobotContainer {
     // vision = new Vision(drivetrain::getPose, drivetrain::updatePose);
     // periodic.accept(vision::update, 0.1); // setup the vision system to update every .1 seconds
 
-    setupPathPlanner();
+    //setupPathPlanner();
 
     xboxController = new NWUXboxController(0);
     joystick = new CommandJoystick(1);
@@ -65,11 +65,11 @@ public class RobotContainer {
     xboxController.leftBumper().onTrue(drivetrain.raiseMultiplier());
     // xboxController.rightTrigger().
 
-    joystick.button(0).onTrue(arm.stop());
-    arm.setDefaultCommand(Commands.run(() -> {
-      arm.runArm(joystick.getX());
-      arm.runWinch(joystick.getTwist());
-    }, arm));
+    // joystick.button(0).onTrue(arm.stop());
+    // arm.setDefaultCommand(Commands.run(() -> {
+    //   arm.runArm(joystick.getX());
+    //   arm.runWinch(joystick.getTwist());
+    // }, arm));
   }
 
   private void setupPathPlanner() {
