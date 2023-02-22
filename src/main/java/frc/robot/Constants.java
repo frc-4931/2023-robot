@@ -91,7 +91,7 @@ public final class Constants {
 
   public static final class ArmConstants {
     public static final MotorConfig ARM_MOTOR = new MotorConfig()
-            .canId(11)
+            .canId(12)
             .idleMode(IdleMode.kBrake)
             .pidConfig(new PIDConfig()
               .kP(5e-5)
@@ -104,7 +104,7 @@ public final class Constants {
               .outputRangeLow(-1)
               .allowedClosedLoopError(1)
             )
-            .alternateEncoderConfig(new AlternateEncoderConfig())
+            // .alternateEncoderConfig(new AlternateEncoderConfig())
             .positionConversionFactor(Units.rotationsToRadians(1))
             .softLimitForward(new SoftLimit().limit(180)) // TODO: need to find the value to do floor pickup
             .softLimitReverse(new SoftLimit().limit(0))
@@ -116,7 +116,7 @@ public final class Constants {
     public static final double FEED_FORWARD_KA = 0;
 
     public static final MotorConfig WINCH_MOTOR = new MotorConfig()
-      .canId(13)
+      .canId(11)
       .idleMode(IdleMode.kBrake)
       .pidConfig(new PIDConfig()
         .kP(5e-5)
