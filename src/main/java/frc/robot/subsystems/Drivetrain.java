@@ -56,7 +56,7 @@ public class Drivetrain extends SubsystemBase {
   private Field2d field2d;
   private MecanumDrivePoseEstimator poseEstimator;
   private WPI_PigeonIMU imu;
-  private AHRS ahrs;
+  // private AHRS ahrs;
   private boolean fieldOriented = false;
   private static final Rotation2d ZERO = new Rotation2d(0);
   private Multiplier multiplier = Multiplier.FULL;
@@ -76,7 +76,7 @@ public class Drivetrain extends SubsystemBase {
     imu.setAccumZAngle(0);
     imu.reset();
 
-    ahrs = new AHRS(Port.kMXP);
+    // ahrs = new AHRS(Port.kMXP);
 
     drive = new MecanumDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
     poseEstimator = new MecanumDrivePoseEstimator(DRIVE_KINEMATICS, getAngle(), getWheelPositions(), new Pose2d());
@@ -148,7 +148,7 @@ public class Drivetrain extends SubsystemBase {
     field2d.setRobotPose(getPose());
     SmartDashboard.putData(drive);
     SmartDashboard.putData(imu);
-    SmartDashboard.putData(ahrs);
+    // SmartDashboard.putData(ahrs);
   }
 
   public Command defaultDriveCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier, 
