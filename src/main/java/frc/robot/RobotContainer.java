@@ -39,6 +39,7 @@ public class RobotContainer {
   public RobotContainer(BiConsumer<Runnable, Double> periodic) {
     drivetrain = new Drivetrain();
     claw = new Claw();
+    arm = new Arm();
     // vision = new Vision(drivetrain::getPose, drivetrain::updatePose);
     // periodic.accept(vision::update, 0.1); // setup the vision system to update every .1 seconds
 
@@ -63,13 +64,14 @@ public class RobotContainer {
 
     xboxController.rightBumper().onTrue(drivetrain.lowerMultiplier());
     xboxController.leftBumper().onTrue(drivetrain.raiseMultiplier());
+    
     // xboxController.rightTrigger().
 
-    // joystick.button(0).onTrue(arm.stop());
-    // arm.setDefaultCommand(Commands.run(() -> {
-    //   arm.runArm(joystick.getX());
-    //   arm.runWinch(joystick.getTwist());
-    // }, arm));
+    joystick.button(1).onTrue(arm.stop());
+    arm.setDefaultCommand(Commands.run(() -> {
+      arm.runArm(joystick.getX());
+      arm.runWinch(joystick.getTwist());
+    }, arm));
   }
 
   private void setupPathPlanner() {
@@ -86,13 +88,13 @@ public class RobotContainer {
       drivetrain::outputWheelSpeeds,
       eventMap,
       true,
-      drivetrain, arm, claw);
+      drivetrain); //, arm, claw
   }
 
   private Command newPathCommand() {
     return Commands.runOnce(() -> pathPlannerUtil
       .generateTrajectory(pathConstraints, drivetrain.getPose(), drivetrain.getChassisSpeeds())
-      .ifPresent(t -> autoBuilder.followPathWithEvents(t).schedule()), drivetrain, arm, claw);
+      .ifPresent(t -> autoBuilder.followPathWithEvents(t).schedule()), drivetrain); // arm, claw
   }
   
   public Command getAutonomousCommand() {
