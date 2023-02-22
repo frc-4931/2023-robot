@@ -15,13 +15,13 @@ public class NWUXboxController extends CommandXboxController {
 
   @Override
   public double getLeftY() {
-    return -super.getLeftX();
+    return super.getLeftX();
   }
   
-  @Override
-  public double getRightX() {
-    return -super.getRightX();
-  }
+  // @Override
+  // public double getRightX() {
+  //   return -super.getRightX();
+  // }
 
   // @Override
   // public double getRightY() {
