@@ -10,8 +10,8 @@ public class Claw extends SubsystemBase {
   private DoubleSolenoid rod1, rod2;
 
   public Claw() {
-    rod1 = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 5, 4);
-    rod2 = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 7, 6);
+    rod1 = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 5, 3);
+    rod2 = new DoubleSolenoid(PneumaticsModuleType.CTREPCM, 4, 2);
   }
   
   public Command openCommand() {
