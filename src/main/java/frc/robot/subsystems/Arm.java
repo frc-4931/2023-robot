@@ -29,11 +29,13 @@ public class Arm extends SubsystemBase {
   private static final double THETA_MAX = Units.degreesToRadians(42.78);
 
   private ArmFeedforward armFeedforward;
-  private CANSparkMax armMotor, winchMotor;
+  private CANSparkMax armMotor;
+  private CANSparkMax winchMotor;
   private SparkMaxPIDController armPidController;
   private RelativeEncoder armEncoder;
   private double armPosition;
   private double winchPosition;
+  private boolean useSmartMotion = false;
 
   public Arm() {
     armFeedforward = new ArmFeedforward(FEED_FORWARD_KS, FEED_FORWARD_KG, FEED_FORWARD_KV, FEED_FORWARD_KA);
@@ -57,16 +59,23 @@ public class Arm extends SubsystemBase {
     // calculate the FF
     var ff = armFeedforward.calculate(theta, velocity, acceleration);
 
-    // set the reference point
-    armPidController.setReference(armPosition, ControlType.kSmartMotion, 0, ff, ArbFFUnits.kVoltage);
-
     // calc max length
     var thetaMod = MathUtil.inputModulus(theta, 0, NINETY_DEG);
     var maxLength = thetaMod < THETA_MAX ? MAX_EXTENSION / Math.cos(thetaMod) : MAX_HEIGHT / Math.sin(thetaMod);
 
     var len = maxLength - BASE_LENGTH;
-    winchMotor.setSoftLimit(SoftLimitDirection.kForward, (float) len);
-    winchMotor.getPIDController().setReference(Math.max(winchPosition, len), ControlType.kSmartMotion);
+    // winchMotor.setSoftLimit(SoftLimitDirection.kForward, (float) len);
+    
+    if (useSmartMotion) {
+      // set the reference point
+      // armPidController.setReference(armPosition, ControlType.kSmartMotion, 0, ff, ArbFFUnits.kVoltage);
+
+      // winchMotor.getPIDController().setReference(Math.max(winchPosition, len), ControlType.kSmartMotion);  
+    }
+    else {
+      armMotor.set(armPosition);
+      winchMotor.set(winchPosition);
+    }
     
     SmartDashboard.putNumber("Arm position", theta);
     SmartDashboard.putNumber("Arm Alt Encoder Velocity", velocity);
@@ -77,8 +86,6 @@ public class Arm extends SubsystemBase {
     SmartDashboard.putNumber("Winch Position", winchMotor.getEncoder().getPosition());
     SmartDashboard.putNumber("Winch Velocity", winchMotor.getEncoder().getVelocity());
     SmartDashboard.putNumber("Winch Applied Output", winchMotor.getAppliedOutput());
-    
-
   }
 
   private void setGoal(double position) {
@@ -90,15 +97,29 @@ public class Arm extends SubsystemBase {
   }
 
   public void runArm(double value) {
-    armMotor.set(value * .5);
+    if (Math.abs(value) > .09) {
+      useSmartMotion = false;
+      armPosition = value * .5;
+    //   armMotor.set(armPosition);
+    }
+    // else armMotor.set(0);
+    // // armPosition = 0;
   }
 
   public void runWinch(double value) {
-    winchMotor.set(value * .5);
+    if (Math.abs(value) > .09) {
+      useSmartMotion = false;
+      // winchMotor.set(value * .8);
+      winchPosition = value;
+    }
+    // else {
+    //   winchMotor.set(0);
+    // }
   }
 
   public Command stop() {
     return this.runOnce(() -> {
+      useSmartMotion = false;
       winchMotor.set(0);
       armMotor.set(0);
     });
