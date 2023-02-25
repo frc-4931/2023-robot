@@ -14,8 +14,6 @@ import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxPIDController;
 import com.revrobotics.CANSparkMax.ControlType;
-import com.revrobotics.CANSparkMax.SoftLimitDirection;
-import com.revrobotics.SparkMaxAlternateEncoder.Type;
 import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 
 import edu.wpi.first.math.MathUtil;
@@ -28,7 +26,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 public class Arm extends SubsystemBase {
   public enum ArmHeight {
     FLOOR(0), CONE_1(0), CUBE_1(0), CONE_2(0), CUBE_2(0), LOADING(0), TRAVELING(0);
-    
+
     double position;
     ArmHeight(double p) {
       position = p;
@@ -45,7 +43,6 @@ public class Arm extends SubsystemBase {
   private CANSparkMax winchMotor;
   private SparkMaxPIDController armPidController;
   private SparkMaxPIDController winchPidController;
-  // private RelativeEncoder armEncoder;
   private AbsoluteEncoder armEncoder;
   private RelativeEncoder winchEncoder;
   private double armFeedforwardValue;
@@ -60,6 +57,8 @@ public class Arm extends SubsystemBase {
     armEncoder = armMotor.getAbsoluteEncoder(com.revrobotics.SparkMaxAbsoluteEncoder.Type.kDutyCycle);
     armEncoder.setPositionConversionFactor(Units.rotationsToRadians(1));
     armPidController.setFeedbackDevice(armEncoder);
+    armMotor.getForwardLimitSwitch(com.revrobotics.SparkMaxLimitSwitch.Type.kNormallyOpen);
+    armMotor.getReverseLimitSwitch(com.revrobotics.SparkMaxLimitSwitch.Type.kNormallyOpen);
 
     // armPosition = Units.degreesToRadians(90);
         
