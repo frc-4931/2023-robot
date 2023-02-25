@@ -24,7 +24,7 @@ public final class Constants {
   public static final class DriveConstants {
     public static final int IMU = 1;
 
-    private static final double OPEN_RAMP_RATE = 0.75;
+    private static final double OPEN_RAMP_RATE = 1.5;
     private static final double WHEEL_DIAMETER_M = Units.inchesToMeters(8);
     private static final double DRIVE_GEAR_RATIO = (14d / 70d) * (30d / 66d);
     private static final double ENCODER_POSITION_CONVERSION =
@@ -105,16 +105,18 @@ public final class Constants {
               .allowedClosedLoopError(1)
             )
             // .alternateEncoderConfig(new AlternateEncoderConfig())
-            .positionConversionFactor(Units.rotationsToRadians(1))
-            .softLimitForward(new SoftLimit().limit(180)) // TODO: need to find the value to do floor pickup
-            .softLimitReverse(new SoftLimit().limit(0))
+            // .positionConversionFactor(Units.rotationsToRadians(1) / 8192)
+            // .softLimitForward(new SoftLimit().limit(180)) // TODO: need to find the value to do floor pickup
+            // .softLimitReverse(new SoftLimit().limit(0))
             .openLoopRampRate(1)
+            // .startPosition(90)
             ;
     public static final double FEED_FORWARD_KS = 0;
     public static final double FEED_FORWARD_KG = 0;
     public static final double FEED_FORWARD_KV = 0;
     public static final double FEED_FORWARD_KA = 0;
 
+    private static final double BASE_LENGTH = Units.inchesToMeters(0); // TODO: 
     public static final MotorConfig WINCH_MOTOR = new MotorConfig()
       .canId(11)
       .idleMode(IdleMode.kBrake)
@@ -131,8 +133,8 @@ public final class Constants {
       )
       // spool diameter * pi * (gear ratio)
       .positionConversionFactor(Units.inchesToMeters(0.787) * Math.PI * (44d /72d))
-      .startPosition(0)
-      // TODO: add soft limits
+      .startPosition(BASE_LENGTH)
+      .softLimitReverse(new SoftLimit().limit((float) BASE_LENGTH))
       
       .openLoopRampRate(1);
   }
@@ -186,13 +188,19 @@ public final class Constants {
         motor.enableSoftLimit(SoftLimitDirection.kReverse, true);
         motor.setSoftLimit(SoftLimitDirection.kReverse, softLimit.limit);
       });
+      // motor.enableVoltageCompensation() ???
+
+      // absoluteEncoder.ifPresent(ae -> {
+
+      // }); 
+      // motor.getAbsoluteEncoder(com.revrobotics.SparkMaxAbsoluteEncoder.Type.kDutyCycle).
 
       alternateEncoder.ifPresentOrElse(ae -> {
         RelativeEncoder encoder = motor.getAlternateEncoder(ae.type, ae.countsPerRevolution);
         encoder.setInverted(ae.inverted);
         encoder.setPosition(startPosition);
-        encoder.setPositionConversionFactor(positionConversionFactor);
-        encoder.setVelocityConversionFactor(positionConversionFactor / 60);
+        // encoder.setPositionConversionFactor(positionConversionFactor);
+        // encoder.setVelocityConversionFactor(positionConversionFactor / 60);
         motor.getPIDController().setFeedbackDevice(encoder);
       }, () -> {
         motor.getEncoder().setPositionConversionFactor(positionConversionFactor);
