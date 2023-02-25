@@ -9,6 +9,8 @@ import static frc.robot.Constants.ArmConstants.WINCH_MOTOR;
 
 import java.util.function.DoubleSupplier;
 
+import javax.security.auth.PrivateCredentialPermission;
+
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.RelativeEncoder;
@@ -21,6 +23,9 @@ import com.revrobotics.SparkMaxPIDController.ArbFFUnits;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ArmFeedforward;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.AnalogInput;
+import edu.wpi.first.wpilibj.DigitalInput;
+import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -45,21 +50,27 @@ public class Arm extends SubsystemBase {
   private CANSparkMax winchMotor;
   private SparkMaxPIDController armPidController;
   private SparkMaxPIDController winchPidController;
+  private Ultrasonic trueUltraSonic;
+  private AnalogInput ultraSonic;
   // private RelativeEncoder armEncoder;
   private AbsoluteEncoder armEncoder;
   private RelativeEncoder winchEncoder;
   private double armFeedforwardValue;
   private double armPosition;
   private double winchPosition;
+  private DigitalInput[] throughBeams;
   
   public Arm() {
     armFeedforward = new ArmFeedforward(FEED_FORWARD_KS, FEED_FORWARD_KG, FEED_FORWARD_KV, FEED_FORWARD_KA);
     armMotor = ARM_MOTOR.createMotor();
     armPidController = armMotor.getPIDController();
-    
+    ultraSonic = new AnalogInput(2);
+    trueUltraSonic = new Ultrasonic(1,0);
+    Ultrasonic.setAutomaticMode(true);
     armEncoder = armMotor.getAbsoluteEncoder(com.revrobotics.SparkMaxAbsoluteEncoder.Type.kDutyCycle);
     armEncoder.setPositionConversionFactor(Units.rotationsToRadians(1));
     armPidController.setFeedbackDevice(armEncoder);
+    throughBeams = new DigitalInput[] {new DigitalInput(9), new DigitalInput(4)};
 
     // armPosition = Units.degreesToRadians(90);
         
@@ -109,6 +120,15 @@ public class Arm extends SubsystemBase {
     SmartDashboard.putNumber("Winch Goal", winchPosition);
     SmartDashboard.putNumber("Winch Velocity", winchEncoder.getVelocity());
     SmartDashboard.putNumber("Winch Applied Output", winchMotor.getAppliedOutput());
+
+    SmartDashboard.putNumber("Ultrasonic Voltage", ultraSonic.getVoltage());
+    SmartDashboard.putNumber("UltraSonic Value", ultraSonic.getValue());
+    SmartDashboard.putNumber("UltraSonicCalculated", getWinchPosition());
+    SmartDashboard.putNumber("TrueUltraSonicCalculated", getWinchPosition2());
+    SmartDashboard.putNumber("TrueUltraSonicMillimeters", trueUltraSonic.getRangeMM());
+
+    SmartDashboard.putBoolean("through sensor channel9", throughBeams[0].get());
+    SmartDashboard.putBoolean("through sensor channel4", throughBeams[1].get());
   }
 
   private void setArmGoal(double position) {
@@ -121,6 +141,15 @@ public class Arm extends SubsystemBase {
     // TODO: do we need to have a FF?
     winchPidController.setReference(position, ControlType.kSmartMotion);
   }
+   private double getWinchPosition() {
+    double ultraSonicValue = ultraSonic.getValue() * 4.88 / 5;
+    return ultraSonicValue;
+  }
+  private double getWinchPosition2() {
+    double trueUltraSonicValue = trueUltraSonic.getRangeInches();
+    return trueUltraSonicValue;
+  }
+   
 
   public boolean isAtArmGoal() {
     return compare(armEncoder.getPosition(), armPosition, 0.05);
