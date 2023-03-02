@@ -131,6 +131,7 @@ public final class Constants {
         .outputRangeLow(-1)
         .allowedClosedLoopError(1)
       )
+      .inverted(true)
       // spool diameter * pi * (gear ratio)
       .positionConversionFactor(Units.inchesToMeters(0.787) * Math.PI * (44d /72d))
       .startPosition(BASE_LENGTH)
