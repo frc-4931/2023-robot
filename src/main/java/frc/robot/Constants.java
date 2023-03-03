@@ -26,17 +26,20 @@ public final class Constants {
 
     private static final double OPEN_RAMP_RATE = 1.5;
     private static final double WHEEL_DIAMETER_M = Units.inchesToMeters(8);
-    private static final double DRIVE_GEAR_RATIO = (14d / 70d) * (30d / 66d);
+    private static final double DRIVE_GEAR_RATIO = (70d / 14d) * (66d / 30d);
     private static final double ENCODER_POSITION_CONVERSION =
         Math.PI * WHEEL_DIAMETER_M / DRIVE_GEAR_RATIO;
     // TODO: Find actual values for these!
+    private static final double ks = .14802;
+    private static final double kv = 2.0852;
+    private static final double ka = .45315;
     private static final PIDConfig PID_DEFAULTS = new PIDConfig()
-            .kP(5e-5)
-            .kI(1e-6)
+            .kP(0.4) //0.000047148  .21247
+            .kI(0)
             .kD(0)
             .kFF(0.000156)
             .maxAcceleration(1500)
-            .maxVelocity(2000)
+            .maxVelocity(5700)
             .outputRangeHigh(1)
             .outputRangeLow(-1)
             .allowedClosedLoopError(1)
@@ -75,7 +78,7 @@ public final class Constants {
             ;
 
     // Distance between centers of right and left wheels on robot
-    public static final double kTrackWidth = Units.inchesToMeters(22.09);
+    public static final double kTrackWidth = Units.inchesToMeters(21);
     // Distance between centers of front and back wheels on robot
     public static final double kWheelBase = Units.inchesToMeters(14);
 
@@ -86,7 +89,7 @@ public final class Constants {
             new Translation2d(-kWheelBase / 2, kTrackWidth / 2),
             new Translation2d(-kWheelBase / 2, -kTrackWidth / 2));
 
-    public static final double MAX_SPEED = 1; // m/s
+    public static final double MAX_SPEED = 5; // m/s
   }
 
   public static final class ArmConstants {
@@ -94,21 +97,22 @@ public final class Constants {
             .canId(12)
             .idleMode(IdleMode.kBrake)
             .pidConfig(new PIDConfig()
-              .kP(5e-5)
-              .kI(1e-6)
+              .kP(17)
+              .kI(0)
               .kD(0)
-              .kFF(0.000156)
-              .maxAcceleration(1500)
-              .maxVelocity(2000)
+              .kFF(0.002)
+              .maxAcceleration(2500)
+              .maxVelocity(5700)
               .outputRangeHigh(1)
               .outputRangeLow(-1)
-              .allowedClosedLoopError(1)
+              .allowedClosedLoopError(0.02)
             )
             // .alternateEncoderConfig(new AlternateEncoderConfig())
             // .positionConversionFactor(Units.rotationsToRadians(1) / 8192)
             // .softLimitForward(new SoftLimit().limit(180)) // TODO: need to find the value to do floor pickup
             // .softLimitReverse(new SoftLimit().limit(0))
             .openLoopRampRate(1)
+            .follower(new MotorConfig().canId(13).idleMode(IdleMode.kBrake).inverted(true))
             // .startPosition(90)
             ;
     public static final double FEED_FORWARD_KS = 0;
