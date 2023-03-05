@@ -28,7 +28,7 @@ import frc.robot.subsystems.Arm;
 import frc.robot.subsystems.Claw;
 import frc.robot.subsystems.Drivetrain;
 import frc.robot.subsystems.Vision;
-import frc.robot.subsystems.Arm.ArmHeight;
+import frc.robot.subsystems.Arm.ArmPosition;
 import frc.robot.util.NWUXboxController;
 import frc.robot.util.PathPlannerUtil;
 
@@ -36,7 +36,7 @@ public class RobotContainer {
   private CommandXboxController xboxController;
   private CommandJoystick joystick;
   private Drivetrain drivetrain;
-  // private Arm arm;
+  private Arm arm;
   // private Claw claw;
   // private Vision vision;
   private MecanumAutoBuilder autoBuilder;
@@ -49,7 +49,7 @@ public class RobotContainer {
   public RobotContainer(BiConsumer<Runnable, Double> periodic) {
     drivetrain = new Drivetrain();
     // claw = new Claw();
-    // arm = new Arm();
+    arm = new Arm();
     // vision = new Vision(drivetrain::getPose, drivetrain::updatePose);
     // periodic.accept(vision::update, 0.1); // setup the vision system to update every .1 seconds
 
@@ -75,11 +75,15 @@ public class RobotContainer {
     xboxController.rightBumper().onTrue(drivetrain.lowerMultiplier());
     xboxController.leftBumper().onTrue(drivetrain.raiseMultiplier());
     
-    // TODO: button to reset gyro
-    // TODO: button to toggle field oriented
+    xboxController.start().onTrue(drivetrain.toggleFieldOriented());
+    xboxController.back().onTrue(drivetrain.resetGyro());
     
-    // joystick.button(2).onTrue(arm.stop());
-    // joystick.button(1).whileTrue(arm.manualPositionCommand(joystick::getX, joystick::getTwist));
+    joystick.button(2).onTrue(arm.stop());
+    joystick.button(1).whileTrue(arm.manualPositionCommand(joystick::getX, joystick::getTwist));
+
+    joystick.button(11).onTrue(arm.setPositionCommand(ArmPosition.TRAVELING));
+    joystick.button(12).onTrue(arm.setPositionCommand(ArmPosition.LOADING));
+    joystick.button(8).onTrue(arm.setPositionCommand(ArmPosition.CONE_2));
   }
 
   private void setupPathPlanner() {
@@ -143,10 +147,12 @@ public class RobotContainer {
   private void prepareForTeleop(boolean canceled) {
     // TODO: set to field oriented
     drivetrain.toggleFieldOriented();
+    drivetrain.setAutonomousMode(false);
   }
   
   public Command getAutonomousCommand() {
-    return drivetrain.resetGyro().andThen(
+    return drivetrain.resetGyro().
+    andThen(
     autoBuilder.resetPose(pathGroup.get(0)).andThen(autoBuilder.followPathGroupWithEvents(pathGroup)).finallyDo(this::prepareForTeleop));
   }
 }

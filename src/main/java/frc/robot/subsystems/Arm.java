@@ -12,6 +12,7 @@ import java.util.function.DoubleSupplier;
 import com.revrobotics.AbsoluteEncoder;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMax.ControlType;
+import com.revrobotics.CANSparkMax.FaultID;
 import com.revrobotics.SparkMaxAnalogSensor.Mode;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.SparkMaxAnalogSensor;
@@ -25,15 +26,16 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Ultrasonic;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Arm extends SubsystemBase {
-  public enum ArmHeight {
-    FLOOR(0), CONE_1(0), CUBE_1(0), CONE_2(0), CUBE_2(0), LOADING(0), TRAVELING(0);
+  public enum ArmPosition {
+    TIER_1(0), CONE_2(.33607), CUBE_1(0), CONE_3(0), CUBE_2(0), LOADING(0.4), TRAVELING(0.5);
 
-    double position;
-    ArmHeight(double p) {
-      position = p;
+    double angle;
+    ArmPosition(double angle) {
+      this.angle = angle;
     }
   }
   private static final double MAX_EXTENSION = Units.inchesToMeters(48 + 12.5);
@@ -62,14 +64,18 @@ public class Arm extends SubsystemBase {
     armPidController.setPositionPIDWrappingEnabled(true);
     armPidController.setPositionPIDWrappingMaxInput(1);
     armPidController.setPositionPIDWrappingMinInput(0);
+    armPidController.setOutputRange(-1, 1);
 
     armEncoder = armMotor.getAbsoluteEncoder(com.revrobotics.SparkMaxAbsoluteEncoder.Type.kDutyCycle);
-    armEncoder.setPositionConversionFactor(Units.rotationsToRadians(1));
-    
-    armPidController.setFeedbackDevice(armEncoder);
-    armMotor.getForwardLimitSwitch(com.revrobotics.SparkMaxLimitSwitch.Type.kNormallyOpen);
-    armMotor.getReverseLimitSwitch(com.revrobotics.SparkMaxLimitSwitch.Type.kNormallyOpen);
+    // armEncoder.setPositionConversionFactor(Units.rotationsToRadians(1));
+    resetArmEncoder();
 
+    armPidController.setFeedbackDevice(armEncoder);
+    armMotor.getForwardLimitSwitch(com.revrobotics.SparkMaxLimitSwitch.Type.kNormallyClosed);
+    armMotor.getReverseLimitSwitch(com.revrobotics.SparkMaxLimitSwitch.Type.kNormallyClosed);
+    armMotor.setSmartCurrentLimit(10);
+    
+    
     // armPosition = Units.degreesToRadians(90);
 
     ultraSonic = new Ultrasonic(1,0);
@@ -78,10 +84,13 @@ public class Arm extends SubsystemBase {
     winchMotor = WINCH_MOTOR.createMotor();
     // winchPidController = winchMotor.getPIDController();
     winchEncoder = winchMotor.getEncoder();
+    
     winchPidController = new PIDController(.05, 0, 0);
     // winchPosition = 0;
 
     // this.setDefaultCommand(this.setPositionCommand(ArmHeight.TRAVELING));
+    SmartDashboard.putData("Arm Up", setPositionCommand(ArmPosition.TRAVELING));
+    SmartDashboard.putData("Reset Arm Encoder", resetArmEncoderCommand());
   }
 
   @Override
@@ -117,7 +126,9 @@ public class Arm extends SubsystemBase {
     SmartDashboard.putNumber("Arm Applied Output", armMotor.getAppliedOutput());
     SmartDashboard.putNumber("Arm calculated FF", armFeedforwardValue);
     SmartDashboard.putNumber("Arm Max Length (m)", maxLength);
-    
+    SmartDashboard.putBoolean("Forward limit", armMotor.getFault(FaultID.kHardLimitFwd));
+    SmartDashboard.putBoolean("Reverse limit", armMotor.getFault(FaultID.kHardLimitRev));
+
     SmartDashboard.putNumber("Winch Position (encoder)", winchEncoder.getPosition());
     SmartDashboard.putNumber("Winch Position (ultrasonic)", ultraSonic.getRangeMM());
     SmartDashboard.putNumber("Winch Goal", winchPosition);
@@ -149,14 +160,23 @@ public class Arm extends SubsystemBase {
     return compareEq(armEncoder.getPosition(), armPosition, 0.05);
   }
   
-  public Command setPositionCommand(ArmHeight armHeight) {
+  public CommandBase setPositionCommand(ArmPosition armHeight) {
     return run(() -> {
-      setArmGoal(armHeight.position);
+      setArmGoal(armHeight.angle);
       // set winch goal
     });
   }
 
-  public Command setPositionTestCommand() {
+  private void resetArmEncoder() {
+    System.out.printf("Enc start pos %f%n", armEncoder.getPosition());
+    armEncoder.setZeroOffset(MathUtil.clamp(armEncoder.getPosition() + .5, 0, 1));
+  }
+
+  public CommandBase resetArmEncoderCommand() {
+    return runOnce(this::resetArmEncoder).ignoringDisable(true);
+  }
+
+  public CommandBase setPositionTestCommand() {
     return run(() -> {
       // Read values from smartdashboard
 
@@ -164,26 +184,27 @@ public class Arm extends SubsystemBase {
     });
   }
 
-  public Command runArmTestCommand() {
+  public CommandBase runArmTestCommand() {
     return run(() -> {
       armMotor.set(.5d);
       winchMotor.set(.5d);
     });
   }
 
-  public Command manualPositionCommand(DoubleSupplier arm, DoubleSupplier winch) {
+  public CommandBase manualPositionCommand(DoubleSupplier arm, DoubleSupplier winch) {
     return run(() -> {
       double armVal = MathUtil.applyDeadband(arm.getAsDouble(), 0.09);
       double winchVal = MathUtil.applyDeadband(winch.getAsDouble(), 0.09);
 
-      if (notZero(armVal)) {
-        armMotor.set(armVal * .05);
+      // System.out.printf("armVal %f; winchVal %f%n", armVal, winchVal);
+
+      armMotor.set(armVal * .25);
       //   setArmGoal(armEncoder.getPosition() + armVal);
-      }
-      if (notZero(winchVal)) {
-        winchMotor.set(winchVal);
+      // }
+      // if (notZero(winchVal)) {
+      winchMotor.set(winchVal * .05);
       //   setWinchGoal(winchEncoder.getPosition() + winchVal);
-      }
+      // }
     });
   }
 

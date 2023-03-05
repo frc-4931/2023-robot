@@ -97,10 +97,10 @@ public final class Constants {
             .canId(12)
             .idleMode(IdleMode.kBrake)
             .pidConfig(new PIDConfig()
-              .kP(17)
+              .kP(.88)
               .kI(0)
               .kD(0)
-              .kFF(0.002)
+              .kFF(0.0003)
               .maxAcceleration(2500)
               .maxVelocity(5700)
               .outputRangeHigh(1)
@@ -120,7 +120,8 @@ public final class Constants {
     public static final double FEED_FORWARD_KV = 0;
     public static final double FEED_FORWARD_KA = 0;
 
-    private static final double BASE_LENGTH = Units.inchesToMeters(0); // TODO: 
+    private static final double BASE_LENGTH = Units.inchesToMeters(9);
+    private static final double MAX_LENTGH = Units.inchesToMeters(26); 
     public static final MotorConfig WINCH_MOTOR = new MotorConfig()
       .canId(11)
       .idleMode(IdleMode.kBrake)
@@ -130,17 +131,17 @@ public final class Constants {
         .kD(0)
         .kFF(0.000156)
         .maxAcceleration(1500)
-        .maxVelocity(2000)
+        .maxVelocity(500)
         .outputRangeHigh(1)
         .outputRangeLow(-1)
         .allowedClosedLoopError(1)
       )
-      .inverted(true)
+      // .inverted(true)
       // spool diameter * pi * (gear ratio)
       .positionConversionFactor(Units.inchesToMeters(0.787) * Math.PI * (44d /72d))
       .startPosition(BASE_LENGTH)
       .softLimitReverse(new SoftLimit().limit((float) BASE_LENGTH))
-      
+      .softLimitForward(new SoftLimit().limit((float) MAX_LENTGH))
       .openLoopRampRate(1);
   }
 

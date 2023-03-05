@@ -61,6 +61,10 @@ public class Drivetrain extends SubsystemBase {
     field2d = new Field2d();
   }
 
+  public void setAutonomousMode(boolean auto) {
+    drive.setSafetyEnabled(!auto);
+  }
+
   public void drive(double xSpeed, double ySpeed, double zSpeed) {
     var z = fieldOriented ? getAngle() : ZERO;
     drive.driveCartesian(xSpeed * multiplier, ySpeed * multiplier, zSpeed * multiplier, z);
@@ -93,7 +97,8 @@ public class Drivetrain extends SubsystemBase {
   }
 
   public Rotation2d getAngle() {
-    return imu.getRotation2d();
+    Rotation2d r = imu.getRotation2d();
+    return r.times(-1);
   }
 
   public Pose2d getPose() {
