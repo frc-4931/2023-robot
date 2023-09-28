@@ -49,7 +49,7 @@ public final class Constants {
             .canId(10)
             .idleMode(IdleMode.kBrake)
             .pidConfig(PID_DEFAULTS)
-            .positionConversionFactor(ENCODER_POSITION_CONVERSION)
+            .encoderConfig(new EncoderConfig().positionConversionFactor(ENCODER_POSITION_CONVERSION))
             .openLoopRampRate(OPEN_RAMP_RATE)
             ;
     public static final MotorConfig FRONT_RIGHT = new MotorConfig()
@@ -57,14 +57,14 @@ public final class Constants {
             .inverted(true)
             .idleMode(IdleMode.kBrake)
             .pidConfig(PID_DEFAULTS)
-            .positionConversionFactor(ENCODER_POSITION_CONVERSION)
+            .encoderConfig(new EncoderConfig().positionConversionFactor(ENCODER_POSITION_CONVERSION))
             .openLoopRampRate(OPEN_RAMP_RATE)
             ;
     public static final MotorConfig REAR_LEFT = new MotorConfig()
             .canId(8)
             .idleMode(IdleMode.kBrake)
             .pidConfig(PID_DEFAULTS)
-            .positionConversionFactor(ENCODER_POSITION_CONVERSION)
+            .encoderConfig(new EncoderConfig().positionConversionFactor(ENCODER_POSITION_CONVERSION))
             .openLoopRampRate(OPEN_RAMP_RATE)
             ;
     public static final MotorConfig REAR_RIGHT = new MotorConfig()
@@ -72,7 +72,7 @@ public final class Constants {
             .inverted(true)
             .idleMode(IdleMode.kBrake)
             .pidConfig(PID_DEFAULTS)
-            .positionConversionFactor(ENCODER_POSITION_CONVERSION)
+            .encoderConfig(new EncoderConfig().positionConversionFactor(ENCODER_POSITION_CONVERSION))
             .openLoopRampRate(OPEN_RAMP_RATE)
             
             ;
@@ -93,28 +93,28 @@ public final class Constants {
   }
 
   public static final class ArmConstants {
-    public static final MotorConfig ARM_MOTOR = new MotorConfig()
-            .canId(12)
-            .idleMode(IdleMode.kBrake)
-            .pidConfig(new PIDConfig()
-              .kP(.88)
-              .kI(0)
-              .kD(0)
-              .kFF(0.0003)
-              .maxAcceleration(2500)
-              .maxVelocity(5700)
-              .outputRangeHigh(1)
-              .outputRangeLow(-1)
-              .allowedClosedLoopError(0.02)
-            )
-            // .alternateEncoderConfig(new AlternateEncoderConfig())
-            // .positionConversionFactor(Units.rotationsToRadians(1) / 8192)
-            // .softLimitForward(new SoftLimit().limit(180)) // TODO: need to find the value to do floor pickup
-            // .softLimitReverse(new SoftLimit().limit(0))
-            .openLoopRampRate(1)
-            .follower(new MotorConfig().canId(13).idleMode(IdleMode.kBrake).inverted(true))
-            // .startPosition(90)
-            ;
+    // public static final MotorConfig ARM_MOTOR = new MotorConfig()
+    //         .canId(12)
+    //         .idleMode(IdleMode.kBrake)
+    //         .pidConfig(new PIDConfig()
+    //           .kP(.88)
+    //           .kI(0)
+    //           .kD(0)
+    //           .kFF(0.0003)
+    //           .maxAcceleration(2500)
+    //           .maxVelocity(5700)
+    //           .outputRangeHigh(1)
+    //           .outputRangeLow(-1)
+    //           .allowedClosedLoopError(0.02)
+    //         )
+    //         // .alternateEncoderConfig(new AlternateEncoderConfig())
+    //         // .positionConversionFactor(Units.rotationsToRadians(1) / 8192)
+    //         // .softLimitForward(new SoftLimit().limit(180)) // TODO: need to find the value to do floor pickup
+    //         // .softLimitReverse(new SoftLimit().limit(0))
+    //         .openLoopRampRate(1)
+    //         .follower(new MotorConfig().canId(13).idleMode(IdleMode.kBrake).inverted(true))
+    //         // .startPosition(90)
+    //         ;
     public static final double FEED_FORWARD_KS = 0;
     public static final double FEED_FORWARD_KG = 0;
     public static final double FEED_FORWARD_KV = 0;
@@ -122,27 +122,27 @@ public final class Constants {
 
     private static final double BASE_LENGTH = Units.inchesToMeters(9);
     private static final double MAX_LENTGH = Units.inchesToMeters(26); 
-    public static final MotorConfig WINCH_MOTOR = new MotorConfig()
-      .canId(11)
-      .idleMode(IdleMode.kBrake)
-      .pidConfig(new PIDConfig()
-        .kP(5e-5)
-        .kI(1e-6)
-        .kD(0)
-        .kFF(0.000156)
-        .maxAcceleration(1500)
-        .maxVelocity(500)
-        .outputRangeHigh(1)
-        .outputRangeLow(-1)
-        .allowedClosedLoopError(1)
-      )
-      // .inverted(true)
-      // spool diameter * pi * (gear ratio)
-      .positionConversionFactor(Units.inchesToMeters(0.787) * Math.PI * (44d /72d))
-      .startPosition(BASE_LENGTH)
-      .softLimitReverse(new SoftLimit().limit((float) BASE_LENGTH))
-      .softLimitForward(new SoftLimit().limit((float) MAX_LENTGH))
-      .openLoopRampRate(1);
+  //   public static final MotorConfig WINCH_MOTOR = new MotorConfig()
+  //     .canId(11)
+  //     .idleMode(IdleMode.kBrake)
+  //     .pidConfig(new PIDConfig()
+  //       .kP(5e-5)
+  //       .kI(1e-6)
+  //       .kD(0)
+  //       .kFF(0.000156)
+  //       .maxAcceleration(1500)
+  //       .maxVelocity(500)
+  //       .outputRangeHigh(1)
+  //       .outputRangeLow(-1)
+  //       .allowedClosedLoopError(1)
+  //     )
+  //     // .inverted(true)
+  //     // spool diameter * pi * (gear ratio)
+  //     // .positionConversionFactor(Units.inchesToMeters(0.787) * Math.PI * (44d /72d))
+  //     // .startPosition(BASE_LENGTH)
+  //     .softLimitReverse(new SoftLimit().limit((float) BASE_LENGTH))
+  //     .softLimitForward(new SoftLimit().limit((float) MAX_LENTGH))
+  //     .openLoopRampRate(1);
   }
 
 
@@ -166,10 +166,10 @@ public final class Constants {
     private Optional<SoftLimit> softLimitForward = Optional.empty();
     private Optional<SoftLimit> softLimitReverse = Optional.empty();
     private Optional<AlternateEncoderConfig> alternateEncoder = Optional.empty();
+    private Optional<EncoderConfig> encoder = Optional.empty();
     private IdleMode idleMode = IdleMode.kBrake;
     private boolean inverted = false;
-    private double positionConversionFactor = 1;
-    private double startPosition = 0;
+    
     private List<PIDConfig> pidConfigs = new ArrayList<>();
     private MotorConfig follower;
   
@@ -201,17 +201,18 @@ public final class Constants {
       // }); 
       // motor.getAbsoluteEncoder(com.revrobotics.SparkMaxAbsoluteEncoder.Type.kDutyCycle).
 
-      alternateEncoder.ifPresentOrElse(ae -> {
+      alternateEncoder.ifPresent(ae -> {
         RelativeEncoder encoder = motor.getAlternateEncoder(ae.type, ae.countsPerRevolution);
         encoder.setInverted(ae.inverted);
-        encoder.setPosition(startPosition);
+        encoder.setPosition(ae.startPosition);
         // encoder.setPositionConversionFactor(positionConversionFactor);
         // encoder.setVelocityConversionFactor(positionConversionFactor / 60);
         motor.getPIDController().setFeedbackDevice(encoder);
-      }, () -> {
-        motor.getEncoder().setPositionConversionFactor(positionConversionFactor);
-        motor.getEncoder().setVelocityConversionFactor(positionConversionFactor / 60);
-        motor.getEncoder().setPosition(startPosition);
+      });
+      encoder.ifPresent(e -> {
+        motor.getEncoder().setPositionConversionFactor(e.positionConversionFactor);
+        motor.getEncoder().setVelocityConversionFactor(e.positionConversionFactor / 60);
+        motor.getEncoder().setPosition(e.startPosition);
       });
   
       SparkMaxPIDController pidController = motor.getPIDController();
@@ -281,16 +282,6 @@ public final class Constants {
       return this;
     }
 
-    public MotorConfig positionConversionFactor(double positionConversionFactor) {
-      this.positionConversionFactor = positionConversionFactor;
-      return this;
-    }
-
-    public MotorConfig startPosition(double startPosition) {
-      this.startPosition = startPosition;
-      return this;
-    }
-
     public MotorConfig pidConfigs(List<PIDConfig> pidConfigs) {
       this.pidConfigs = pidConfigs;
       return this;
@@ -308,6 +299,11 @@ public final class Constants {
 
     public MotorConfig alternateEncoderConfig(AlternateEncoderConfig alternateEncoderConfig) {
       this.alternateEncoder = Optional.ofNullable(alternateEncoderConfig);
+      return this;
+    }
+
+    public MotorConfig encoderConfig(EncoderConfig encoderConfig) {
+      this.encoder = Optional.ofNullable(encoderConfig);
       return this;
     }
   }
@@ -375,10 +371,37 @@ public final class Constants {
     }
   }
 
+  static final class EncoderConfig {
+    private double positionConversionFactor = 1;
+    private double startPosition = 0;
+
+    public EncoderConfig startPosition(double startPosition) {
+      this.startPosition = startPosition;
+      return this;
+    }
+
+    public EncoderConfig positionConversionFactor(double positionConversionFactor) {
+      this.positionConversionFactor = positionConversionFactor;
+      return this;
+    }
+  }
+
   static final class AlternateEncoderConfig {
     private int countsPerRevolution = 8192;
     private Type type = Type.kQuadrature;
     private boolean inverted = false;
+    private double positionConversionFactor = 1;
+    private double startPosition = 0;
+
+    public AlternateEncoderConfig startPosition(double startPosition) {
+      this.startPosition = startPosition;
+      return this;
+    }
+
+    public AlternateEncoderConfig positionConversionFactor(double positionConversionFactor) {
+      this.positionConversionFactor = positionConversionFactor;
+      return this;
+    }
 
     public AlternateEncoderConfig type(Type type) {
       this.type = type;

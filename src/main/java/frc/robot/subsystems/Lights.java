@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -18,7 +19,7 @@ public class Lights extends SubsystemBase {
   public Lights(boolean isRed) {
     
     led = new AddressableLED(9); // PWM
-    ledBuffer = new AddressableLEDBuffer(60);
+    ledBuffer = new AddressableLEDBuffer(160);
     led.setLength(ledBuffer.getLength());
 
     led.setData(ledBuffer);
@@ -40,6 +41,62 @@ public class Lights extends SubsystemBase {
   private void setBlack(boolean interrupted) {
     ledBuffer.setHSV(0, 0, 0, 0);
     led.stop();
+  }
+
+  // public Command runBubbles() {
+
+  // }
+  private class BubblesCommand extends CommandBase {
+    private int[][] leftPos = new int[2][3];
+    private int[] left = new int[] { 91, 140, 148 };
+    private int[][] rightPos = new int[2][3];
+    private int[] right = new int[] { 84, 140, 148 };
+    private Timer timer = new Timer();
+
+    @Override
+    public void initialize() {
+      timer.reset();
+      timer.start();
+    }
+
+    @Override
+    public void execute() {
+      if (timer.advanceIfElapsed(5)) {
+
+
+      }
+    }
+  }
+
+  private class RainbowCommand extends CommandBase {
+    RainbowCommand(Lights l) {
+      addRequirements(l);
+    }
+
+    int m_rainbowFirstPixelHue = 0;
+    @Override
+    public void initialize() {
+      m_rainbowFirstPixelHue = 0;
+    }
+    @Override
+    public void execute() {
+      // For every pixel
+      for (var i = 0; i < ledBuffer.getLength(); i++) {
+        // Calculate the hue - hue is easier for rainbows because the color
+        // shape is a circle so only one value needs to precess
+        final var hue = (m_rainbowFirstPixelHue + (i * 180 / ledBuffer.getLength())) % 180;
+        // Set the value
+        ledBuffer.setHSV(i, hue, 255, 128);
+      }
+      // Increase by to make the rainbow "move"
+      m_rainbowFirstPixelHue += 3;
+      // Check bounds
+      m_rainbowFirstPixelHue %= 180;
+    }
+  }
+
+  public Command runRainbow() {
+    return new RainbowCommand(this);
   }
 
   public Command runTeamChase() {
