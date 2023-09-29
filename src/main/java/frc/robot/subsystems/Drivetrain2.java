@@ -21,18 +21,20 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.MecanumDriveOdometry;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelPositions;
 import edu.wpi.first.math.kinematics.MecanumDriveWheelSpeeds;
+import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class Drivetrain extends SubsystemBase {
+public class Drivetrain2 extends SubsystemBase {
   private CANSparkMax frontLeftMotor;
   private CANSparkMax frontRightMotor;
   private CANSparkMax rearLeftMotor;
   private CANSparkMax rearRightMotor;
-  private MecanumDrive drive;
+  private DifferentialDrive differentialDrive;
+  // private MecanumDrive drive;
   private Field2d field2d;
   private MecanumDrivePoseEstimator poseEstimator;
   private WPI_PigeonIMU imu;
@@ -41,7 +43,7 @@ public class Drivetrain extends SubsystemBase {
   private static final Rotation2d ZERO = new Rotation2d(0);
   private double multiplier = 1.0;
 
-  public Drivetrain() {
+  public Drivetrain2() {
     frontLeftMotor = FRONT_LEFT.createMotor();
     frontRightMotor = FRONT_RIGHT.createMotor();
     rearLeftMotor = REAR_LEFT.createMotor();
@@ -55,71 +57,72 @@ public class Drivetrain extends SubsystemBase {
     imu.reset();
 
     // ahrs = new AHRS(Port.kMXP);
-
-    drive = new MecanumDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
-    poseEstimator = new MecanumDrivePoseEstimator(DRIVE_KINEMATICS, getAngle(), getWheelPositions(), new Pose2d());
+    differentialDrive = new DifferentialDrive(frontLeftMotor, frontRightMotor);
+    // drive = new MecanumDrive(frontLeftMotor, rearLeftMotor, frontRightMotor, rearRightMotor);
+    // poseEstimator = new MecanumDrivePoseEstimator(DRIVE_KINEMATICS, getAngle(), getWheelPositions(), new Pose2d());
     field2d = new Field2d();
   }
 
-  public void setAutonomousMode(boolean auto) {
-    drive.setSafetyEnabled(!auto);
-  }
+  // public void setAutonomousMode(boolean auto) {
+  //   drive.setSafetyEnabled(!auto);
+  // }
 
   public void drive(double xSpeed, double ySpeed, double zSpeed) {
     var z = fieldOriented ? getAngle() : ZERO;
-    drive.driveCartesian(xSpeed * multiplier, ySpeed * multiplier, zSpeed * multiplier, z);
+    differentialDrive.arcadeDrive(xSpeed * multiplier, zSpeed * multiplier);
+    // drive.driveCartesian(xSpeed * multiplier, ySpeed * multiplier, zSpeed * multiplier, z);
   }
 
-  public void outputWheelSpeeds(MecanumDriveWheelSpeeds wheelSpeeds) {
-    wheelSpeeds.desaturate(MAX_SPEED);
-    // TODO: need arbitrary FF?
-    frontLeftMotor.getPIDController().setReference(wheelSpeeds.frontLeftMetersPerSecond, ControlType.kVelocity);
-    frontRightMotor.getPIDController().setReference(wheelSpeeds.frontRightMetersPerSecond, ControlType.kVelocity);
-    rearLeftMotor.getPIDController().setReference(wheelSpeeds.rearLeftMetersPerSecond, ControlType.kVelocity);
-    rearRightMotor.getPIDController().setReference(wheelSpeeds.rearRightMetersPerSecond, ControlType.kVelocity);
-  }
+  // public void outputWheelSpeeds(MecanumDriveWheelSpeeds wheelSpeeds) {
+  //   wheelSpeeds.desaturate(MAX_SPEED);
+  //   // TODO: need arbitrary FF?
+  //   frontLeftMotor.getPIDController().setReference(wheelSpeeds.frontLeftMetersPerSecond, ControlType.kVelocity);
+  //   frontRightMotor.getPIDController().setReference(wheelSpeeds.frontRightMetersPerSecond, ControlType.kVelocity);
+  //   rearLeftMotor.getPIDController().setReference(wheelSpeeds.rearLeftMetersPerSecond, ControlType.kVelocity);
+  //   rearRightMotor.getPIDController().setReference(wheelSpeeds.rearRightMetersPerSecond, ControlType.kVelocity);
+  // }
 
-  public void outputChasisSpeeds(ChassisSpeeds chassisSpeeds) {
-    outputWheelSpeeds(DRIVE_KINEMATICS.toWheelSpeeds(chassisSpeeds));
-  }
+  // public void outputChasisSpeeds(ChassisSpeeds chassisSpeeds) {
+  //   outputWheelSpeeds(DRIVE_KINEMATICS.toWheelSpeeds(chassisSpeeds));
+  // }
 
-  public void resetPose(Pose2d pose) {
-    System.out.printf("reset the pose angle: %f; pose: %f %f%n", getAngle().getDegrees(), pose.getX(), pose.getY());
-    poseEstimator.resetPosition(getAngle(), getWheelPositions(), pose);
-  }
+  // public void resetPose(Pose2d pose) {
+  //   System.out.printf("reset the pose angle: %f; pose: %f %f%n", getAngle().getDegrees(), pose.getX(), pose.getY());
+  //   poseEstimator.resetPosition(getAngle(), getWheelPositions(), pose);
+  // }
 
-  public void updatePose(Pose2d calcPose2d, double timestamp) {
-    poseEstimator.addVisionMeasurement(calcPose2d, timestamp);
-  }
+  // public void updatePose(Pose2d calcPose2d, double timestamp) {
+  //   poseEstimator.addVisionMeasurement(calcPose2d, timestamp);
+  // }
 
-  private void updateOdometry() {
-    poseEstimator.update(getAngle(), getWheelPositions());
-  }
+  // private void updateOdometry() {
+  //   poseEstimator.update(getAngle(), getWheelPositions());
+  // }
 
   public Rotation2d getAngle() {
     Rotation2d r = imu.getRotation2d();
     return r.times(-1);
   }
 
-  public Pose2d getPose() {
-    return poseEstimator.getEstimatedPosition();
-  }
+  // public Pose2d getPose() {
+  //   return poseEstimator.getEstimatedPosition();
+  // }
 
-  public MecanumDriveWheelPositions getWheelPositions() {
-    return new MecanumDriveWheelPositions(frontLeftMotor.getEncoder().getPosition(),
-        frontRightMotor.getEncoder().getPosition(), rearLeftMotor.getEncoder().getPosition(),
-        rearRightMotor.getEncoder().getPosition());
-  }
+  // public MecanumDriveWheelPositions getWheelPositions() {
+  //   return new MecanumDriveWheelPositions(frontLeftMotor.getEncoder().getPosition(),
+  //       frontRightMotor.getEncoder().getPosition(), rearLeftMotor.getEncoder().getPosition(),
+  //       rearRightMotor.getEncoder().getPosition());
+  // }
 
-  public MecanumDriveWheelSpeeds getWheelSpeeds() {
-    return new MecanumDriveWheelSpeeds(frontLeftMotor.getEncoder().getVelocity(),
-        frontRightMotor.getEncoder().getVelocity(), rearLeftMotor.getEncoder().getVelocity(),
-        rearRightMotor.getEncoder().getVelocity());
-  }
+  // public MecanumDriveWheelSpeeds getWheelSpeeds() {
+  //   return new MecanumDriveWheelSpeeds(frontLeftMotor.getEncoder().getVelocity(),
+  //       frontRightMotor.getEncoder().getVelocity(), rearLeftMotor.getEncoder().getVelocity(),
+  //       rearRightMotor.getEncoder().getVelocity());
+  // }
 
-  public ChassisSpeeds getChassisSpeeds() {
-    return DRIVE_KINEMATICS.toChassisSpeeds(getWheelSpeeds());
-  }
+  // public ChassisSpeeds getChassisSpeeds() {
+  //   return DRIVE_KINEMATICS.toChassisSpeeds(getWheelSpeeds());
+  // }
 
   public boolean isFieldOriented() {
     return fieldOriented;
@@ -127,9 +130,9 @@ public class Drivetrain extends SubsystemBase {
 
   @Override
   public void periodic() {
-    updateOdometry();
-    field2d.setRobotPose(getPose());
-    SmartDashboard.putData(drive);
+    // updateOdometry();
+    // field2d.setRobotPose(getPose());
+    SmartDashboard.putData(differentialDrive);
     SmartDashboard.putData(imu);
     // SmartDashboard.putData(field2d);
     SmartDashboard.putBoolean("FieldOriented", fieldOriented);
@@ -144,17 +147,17 @@ public class Drivetrain extends SubsystemBase {
         zSupplier.getAsDouble()));
   }
 
-  public Command wheelSpeedDriveCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier,
-      DoubleSupplier zSupplier) {
-    return this.run(() -> {
-      var wheelSpeeds = DRIVE_KINEMATICS.toWheelSpeeds(
-          fieldOriented
-              ? ChassisSpeeds.fromFieldRelativeSpeeds(xSupplier.getAsDouble(), ySupplier.getAsDouble(),
-                  zSupplier.getAsDouble(), getAngle())
-              : new ChassisSpeeds(xSupplier.getAsDouble(), ySupplier.getAsDouble(), zSupplier.getAsDouble()));
-      outputWheelSpeeds(wheelSpeeds);
-    });
-  }
+  // public Command wheelSpeedDriveCommand(DoubleSupplier xSupplier, DoubleSupplier ySupplier,
+  //     DoubleSupplier zSupplier) {
+  //   return this.run(() -> {
+  //     var wheelSpeeds = DRIVE_KINEMATICS.toWheelSpeeds(
+  //         fieldOriented
+  //             ? ChassisSpeeds.fromFieldRelativeSpeeds(xSupplier.getAsDouble(), ySupplier.getAsDouble(),
+  //                 zSupplier.getAsDouble(), getAngle())
+  //             : new ChassisSpeeds(xSupplier.getAsDouble(), ySupplier.getAsDouble(), zSupplier.getAsDouble()));
+  //     outputWheelSpeeds(wheelSpeeds);
+  //   });
+  // }
 
   public Command toggleFieldOriented() {
     return this.runOnce(() -> fieldOriented = !fieldOriented);
